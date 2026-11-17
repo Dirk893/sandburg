@@ -15,18 +15,16 @@ Reach the Sandburg without a Tailscale account, through a WireGuard network you 
 - Document the hub setup (VPS, `wg0.conf`, keys) and the client side. The plugin's `host` then becomes the WireGuard IP of the pod.
 - `start-tailscale.sh` and `start-wireguard.sh` should exclude each other; pick one via e.g. `NETWORK=tailscale|headscale|wireguard|none`.
 
-## OpenCode instead of Claude Code
+## OpenCode: what is still open
 
-A client variant for [OpenCode](https://opencode.ai), so the Sandburg can be used with other LLMs (OpenAI, Gemini, local models via Ollama/vLLM, etc.).
+OpenCode already runs on the pod as a web UI (`ENABLE_OPENCODE=1`, see the README). Still open:
 
-- The server side stays the same: OpenCode speaks MCP over HTTP and can send the bearer token as a header (`"type": "remote"`, `url`, `headers` in `opencode.json`).
-- Things the Claude Code plugin does today that need an equivalent:
-  - the MCP server list (`plugin/.claude-plugin/plugin.json`): generate `opencode.json` from it, so the list of services is maintained in one place
-  - the address/token configuration (`userConfig`, stored in the keychain): for OpenCode probably environment variables (`{env:SANDBURG_TOKEN}`)
-  - the `SessionStart` hook that writes `~/.config/sandburg/config` for the `sandburg` command: document a manual setup or a small `sandburg configure` subcommand instead
-  - the skill (`plugin/skills/sandburg/SKILL.md`) that explains folders and workflows: check whether OpenCode loads it as a skill, otherwise ship it as an `AGENTS.md` snippet or OpenCode agent
-- **Many tools:** all services together expose a few hundred MCP tools. Smaller or local models handle that poorly. Allow enabling only a subset of services per project, and test which models cope with the Blender/FreeCAD/KiCad tools at all.
-- Idea: run the model on the pod's GPU itself (vLLM or Ollama as an optional service, `ENABLE_LLM=1`), so the whole setup works without any cloud LLM. GPU memory has to be shared with ComfyUI, Blender and Voice.
+- **Test with real models:** which models (via OpenRouter, local) cope with the Blender/FreeCAD/KiCad tools, whether tool results with images reach the model, and whether long tool calls (renders, 15–30 minutes) run through with the configured timeouts.
+- **Ollama on your own machine:** in userspace mode, Tailscale does not route the pod's outgoing connections into the tailnet. `tailscaled --outbound-http-proxy-listen=127.0.0.1:1055` plus `HTTP_PROXY` for OpenCode (with `NO_PROXY=127.0.0.1,localhost` for the MCP proxy) should make a local Ollama reachable through its 100.x IP. Check whether Bun's fetch honors `HTTP_PROXY`, and whether internet traffic still goes out directly through the proxy.
+- **An LLM on the pod's GPU** (vLLM or Ollama as an optional service, `ENABLE_LLM=1`), preconfigured as a provider in OpenCode, so the whole setup works without any cloud LLM. GPU memory has to be shared with ComfyUI, Blender and Voice.
+- **OpenCode locally as a client** (like the Claude Code plugin): generate an `opencode.json` with `"type": "remote"` entries for `http://sandburg:9090/<service>/mcp` and `{env:SANDBURG_TOKEN}`, plus `sandburg get/put` for files, and the skill as `AGENTS.md`.
+- **Keep the instructions in one place:** `rootfs/opt/sandburg/opencode/AGENTS.md` duplicates most of `plugin/skills/sandburg/SKILL.md`. Generate both from shared parts.
+- **New MCP config format:** newer OpenCode versions have `mcp.servers` with separate `startup`/`catalog`/`execution` timeouts and mark the old format as deprecated. Switch over once the pinned version supports it.
 
 ## More cloud providers than RunPod
 

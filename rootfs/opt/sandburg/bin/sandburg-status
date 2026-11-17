@@ -6,7 +6,7 @@ echo "== Processes"
 supervisorctl -c /opt/sandburg/supervisord.conf status
 echo
 echo "== Listening ports"
-ss -ltnp 2> /dev/null | awk 'NR==1 || /:(9090|8090|9876|9875|8188|5900|6080)\b/'
+ss -ltnp 2> /dev/null | awk 'NR==1 || /:(9090|8090|9876|9875|8188|5900|6080|4096)\b/'
 echo
 echo "== MCP proxy"
 curl -fsS http://127.0.0.1:9090/_readyz 2> /dev/null || curl -fsS "http://${BIND_ADDR:-127.0.0.1}:9090/_readyz" || echo "proxy not reachable"

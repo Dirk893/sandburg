@@ -4,6 +4,7 @@
 workspace/
 *.md
 !README.md
+!rootfs/**/*.md
 client/
 plugin/
 .claude-plugin/

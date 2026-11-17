@@ -16,6 +16,7 @@ docker compose up -d
 # Files:   http://localhost:8090                 (user sandburg, password = token)
 # Desktop: http://localhost:6080/vnc.html
 # ComfyUI: http://localhost:8188
+# OpenCode: http://localhost:4096                (with ENABLE_OPENCODE=1, user opencode)
 ```
 
 To build the image yourself instead, run `docker compose up -d --build`. Run `pull` explicitly when you want the GHCR image: if the image is missing locally, `up` builds it instead of pulling it. Set `SANDBURG_IMAGE` in `.env` to use a different image or tag.
@@ -32,7 +33,7 @@ On a GPU server you can reach over SSH, start the container exactly as [on your 
 
 ```bash
 ssh -N -L 9090:127.0.0.1:9090 -L 8090:127.0.0.1:8090 \
-       -L 6080:127.0.0.1:6080 -L 8188:127.0.0.1:8188 user@server
+       -L 6080:127.0.0.1:6080 -L 8188:127.0.0.1:8188 -L 4096:127.0.0.1:4096 user@server
 ```
 
 Or once in `~/.ssh/config`, then `ssh -N sandburg-server`:
@@ -45,9 +46,10 @@ Host sandburg-server
     LocalForward 8090 127.0.0.1:8090
     LocalForward 6080 127.0.0.1:6080
     LocalForward 8188 127.0.0.1:8188
+    LocalForward 4096 127.0.0.1:4096
 ```
 
-While the tunnel is open, everything is reachable at the same `localhost` addresses as with a local container. Only 9090 (MCP) and 8090 (files) are needed for Claude Code. 6080 and 8188 are for the desktop and the ComfyUI web UI in your browser.
+While the tunnel is open, everything is reachable at the same `localhost` addresses as with a local container. Only 9090 (MCP) and 8090 (files) are needed for Claude Code. 6080 and 8188 are for the desktop and the ComfyUI web UI in your browser, 4096 for OpenCode.
 
 The address in the plugin is therefore `127.0.0.1`, but the token is the **server's**: `SANDBURG_TOKEN` from the `.env` on the server, or `workspace/.sandburg-token` there if you left it empty. The token in a `.env` on your own machine does not apply. With the wrong token, all MCP servers fail with HTTP 401. To read it on the server:
 

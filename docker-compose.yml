@@ -5,7 +5,8 @@
 #
 # Without Tailscale, everything is reachable via the ports published on 127.0.0.1,
 # e.g. http://localhost:9090/blender/mcp and
-# http://localhost:6080/vnc.html, files at http://localhost:8090
+# http://localhost:6080/vnc.html, files at http://localhost:8090,
+# OpenCode (ENABLE_OPENCODE=1) at http://localhost:4096
 services:
   sandburg:
     build: .
@@ -16,7 +17,7 @@ services:
       # Listen on all interfaces inside the container so Docker can publish the
       # ports. The "127.0.0.1:" prefix below keeps them local to the host.
       BIND_ADDR: 0.0.0.0
-      # Same for noVNC and ComfyUI. Never do this on a cloud pod: ComfyUI has
+      # Same for noVNC, ComfyUI and OpenCode. Never do this on a cloud pod: ComfyUI has
       # no authentication.
       UI_BIND_ADDR: 0.0.0.0
     volumes:
@@ -26,6 +27,7 @@ services:
       - "127.0.0.1:8090:8090"
       - "127.0.0.1:6080:6080"
       - "127.0.0.1:8188:8188"
+      - "127.0.0.1:4096:4096"
     shm_size: 8gb
     # GPUs via CDI: the device nodes become part of the container spec. With the
     # classic "driver: nvidia" hook on cgroup v2 + the systemd cgroup driver, every

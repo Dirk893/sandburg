@@ -2,7 +2,8 @@
 #
 # Sandburg: Blender, FreeCAD, KiCad, build123d, Inkscape, OpenModelica, ngspice,
 # ComfyUI, a browser (Playwright) and optional speech output – with preconfigured
-# MCP servers behind a shared HTTP endpoint (mcp-proxy), reachable via Tailscale.
+# MCP servers behind a shared HTTP endpoint (mcp-proxy), reachable via Tailscale,
+# and optionally OpenCode as an agent in the browser for any LLM.
 # Intended for RunPod and similar clouds, but runs on any Docker host with the
 # NVIDIA Container Toolkit (and even without a GPU if need be). Results are
 # fetched back via the built-in file server (dufs).
@@ -51,6 +52,7 @@ ARG NODE_MAJOR=22
 ARG PLAYWRIGHT_MCP_VERSION=0.0.83
 ARG OPENMODELICA_CHANNEL=release
 ARG SPICEBRIDGE_VERSION=1.3.0
+ARG OPENCODE_VERSION=1.19.5
 
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ=Etc/UTC \
@@ -83,6 +85,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     ENABLE_NGSPICE=1 \
     ENABLE_VOICE=0 \
     ENABLE_COMFYUI_3D=0 \
+    ENABLE_OPENCODE=0 \
     KOKORO_VERSION=0.9.4 \
     TORCH_VERSION=2.11.0 \
     TORCH_INDEX=https://download.pytorch.org/whl/cu128 \
@@ -249,6 +252,15 @@ RUN export UV_LINK_MODE=hardlink \
     && uv tool install --python /usr/bin/python3 /opt/sandburg/servers/disabled-mcp \
     && uv cache clean
 
+# --- OpenCode (agent with web UI, optional: ENABLE_OPENCODE=1) ---------------
+# A single binary; ripgrep backs its search tools (otherwise it downloads its own).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ripgrep \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -fsSL "https://github.com/anomalyco/opencode/releases/download/v${OPENCODE_VERSION}/opencode-linux-x64.tar.gz" \
+        | tar -xz -C /usr/local/bin opencode \
+    && opencode --version
+
 # --- mcp-proxy (late, so a patch or version bump keeps the cache above) -------
 COPY --from=mcp-proxy /out/mcp-proxy /usr/local/bin/mcp-proxy
 
@@ -261,8 +273,9 @@ RUN chmod +x /opt/sandburg/bin/* \
 WORKDIR /workspace
 
 # For documentation only – in normal operation everything goes through Tailscale.
-# 9090 = MCP proxy, 8090 = file server, 6080 = noVNC, 8188 = ComfyUI web UI
-EXPOSE 9090 8090 6080 8188
+# 9090 = MCP proxy, 8090 = file server, 6080 = noVNC, 8188 = ComfyUI web UI,
+# 4096 = OpenCode web UI
+EXPOSE 9090 8090 6080 8188 4096
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \
     CMD curl -fsS http://127.0.0.1:9090/_healthz > /dev/null || exit 1

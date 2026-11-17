@@ -5,7 +5,7 @@
   </picture>
 </p>
 
-**A workshop in the cloud for Claude Code.** Sandburg is a Docker image with Blender, FreeCAD, KiCad, build123d, Inkscape, OpenModelica, ngspice, ComfyUI, a browser and optional speech output, each with a ready-to-use MCP server. You start it on a GPU cloud such as RunPod, it joins your tailnet, and your local Claude Code works with it as if the programs were installed on your machine. A Claude Code plugin wires everything up with a single command, and Claude downloads finished files to you on its own.
+**A workshop in the cloud for Claude Code.** Sandburg is a Docker image with Blender, FreeCAD, KiCad, build123d, Inkscape, OpenModelica, ngspice, ComfyUI, a browser and optional speech output, each with a ready-to-use MCP server. You start it on a GPU cloud such as RunPod, it joins your tailnet, and your local Claude Code works with it as if the programs were installed on your machine. A Claude Code plugin wires everything up with a single command, and Claude downloads finished files to you on its own. Without Claude Code, [OpenCode in the browser](#opencode-in-the-browser) runs on the pod itself and works with any LLM.
 
 <p align="center">
   <picture>
@@ -65,7 +65,7 @@ Tailscale runs in userspace mode and needs neither `/dev/net/tun` nor extra priv
 | Container Disk | 50 GB |
 | Volume Disk | 50 GB or more (PyTorch for ComfyUI, ComfyUI and speech models), mount path `/workspace` |
 | Expose HTTP/TCP Ports | **none**, everything goes through Tailscale |
-| Environment Variables | `TS_AUTHKEY` (ideally as a RunPod secret); optional `SANDBURG_TOKEN`, `TS_HOSTNAME`, `ENABLE_VOICE=1`, `ENABLE_COMFYUI_3D=1` |
+| Environment Variables | `TS_AUTHKEY` (ideally as a RunPod secret); optional `SANDBURG_TOKEN`, `TS_HOSTNAME`, `ENABLE_VOICE=1`, `ENABLE_COMFYUI_3D=1`, `ENABLE_OPENCODE=1` with `OPENCODE_PASSWORD` and an API key such as `OPENROUTER_API_KEY` |
 
 After the first start the token is stored in `/workspace/.sandburg-token`, unless you set `SANDBURG_TOKEN` yourself. With a volume, the token, browser profile, projects and models persist across restarts. The Tailscale node does not, unless you set `TS_STATE_DIR`: each start joins as a new ephemeral node under the same name.
 
@@ -90,6 +90,39 @@ Without MagicDNS, enter the pod's 100.x IP instead of `sandburg` (`tailscale sta
 
 - Desktop with Blender, FreeCAD and browser: `http://sandburg:6080/vnc.html` (password in `/workspace/.vnc-password`)
 - ComfyUI: `http://sandburg:8188`
+- OpenCode (with `ENABLE_OPENCODE=1`): `http://sandburg:4096`, see below
+
+### OpenCode in the browser
+
+As an alternative to Claude Code, the Sandburg can run [OpenCode](https://opencode.ai) itself: a coding agent with a web interface that works with any LLM (OpenRouter, OpenAI, Anthropic, Gemini, an OpenAI-compatible endpoint …). Nothing needs to be installed on your machine; a browser in the tailnet is enough.
+
+1. Set `ENABLE_OPENCODE=1` on the pod, and optionally `OPENCODE_PASSWORD`. Otherwise a password is generated and stored in `/workspace/.opencode-password`.
+2. Open `http://sandburg:4096` and log in as user `opencode` with that password.
+3. Choose a provider and model in OpenCode and enter the API key. The key is stored on the volume. Alternatively, set the provider's usual variable on the pod, e.g. `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` or `GEMINI_API_KEY`.
+
+All enabled services are preconfigured as MCP servers, and OpenCode receives the same instructions as the plugin's skill (folders, which service for what), adapted for working on the pod. The agent also has a shell on the pod and works directly in `/workspace/projects`. You fetch results through the [file server](#5-exchange-files), and sessions persist on the volume under `/workspace/.sandburg/opencode`.
+
+Your own settings, such as a custom provider, belong in `/workspace/projects/opencode.json` (upload it through the file server). It is merged with the generated configuration. An example for an OpenAI-compatible endpoint (Ollama, vLLM, LM Studio …) that the pod can reach:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama",
+      "options": { "baseURL": "https://ollama.example.com/v1" },
+      "models": { "qwen3-coder:30b": { "name": "Qwen3 Coder 30B" } }
+    }
+  }
+}
+```
+
+Notes:
+
+- **Model choice:** All services together expose a few hundred tools. Strong models with reliable tool calling cope well; small local models often don't. Disable services you don't need (`ENABLE_…=0`), and they disappear from OpenCode as well.
+- **Ollama on your own machine** can't be reached from the pod through the tailnet yet, because Tailscale runs in userspace mode there and doesn't route outgoing connections into the tailnet. Cloud APIs and publicly reachable endpoints work.
+- OpenCode connects to the MCP servers when it starts. If a service only becomes ready later (Voice on first start), restart OpenCode: `supervisorctl -c /opt/sandburg/supervisord.conf restart opencode`.
 
 ## 5. Exchange files
 
@@ -152,13 +185,15 @@ Also:
 | `SANDBURG_TOKEN` | generated | Token for the MCP proxy and file server. At least 16 characters, only `A-Z a-z 0-9 . _ ~ -` |
 | `VNC_PASSWORD` | generated | Password for the desktop |
 | `ENABLE_BLENDER`, `_FREECAD`, `_KICAD`, `_BUILD123D`, `_INKSCAPE`, `_OPENMODELICA`, `_NGSPICE`, `_BROWSER`, `_COMFYUI`, `_VNC`, `_FILES` | `1` | Disable individual services (`0`) |
-| `ENABLE_VOICE`, `ENABLE_COMFYUI_3D` | `0` | Enable optional services (`1`) |
+| `ENABLE_VOICE`, `ENABLE_COMFYUI_3D`, `ENABLE_OPENCODE` | `0` | Enable optional services (`1`) |
+| `OPENCODE_PASSWORD` | generated | Password for the OpenCode web UI (user `opencode`) |
+| `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, … | – | API keys for OpenCode; can also be entered in its web UI |
 | `TORCH_VERSION`, `TORCH_INDEX` | `2.11.0`, CUDA 12.8 index | PyTorch for ComfyUI and Voice. Changing it rebuilds both environments on the volume |
 | `VOICE_IDLE_MINUTES` | `10` | Unload speech models after this many minutes without a call (`0` = never) |
 | `BROWSER_VIEWPORT` | `1440x900` | Browser window size |
 | `BROWSER_MCP_ARGS` | – | Extra arguments for Playwright MCP, e.g. `--blocked-origins` |
 | `BIND_ADDR` | `127.0.0.1` | Listen address for the MCP proxy and file server (both token-protected). `0.0.0.0` only without Tailscale |
-| `UI_BIND_ADDR` | `127.0.0.1` | Listen address for noVNC and ComfyUI. ComfyUI has no authentication, so only change this for local `docker compose` |
+| `UI_BIND_ADDR` | `127.0.0.1` | Listen address for noVNC, ComfyUI and OpenCode. ComfyUI has no authentication, so only change this for local `docker compose` |
 | `COMFYUI_ARGS`, `BLENDER_ARGS`, `FREECAD_ARGS` | – | Extra startup arguments |
 | `BLENDER_MCP_SAFE_MODE` | `0` | `1` = check Blender scripts before execution |
 | `XVFB_RESOLUTION` | `1920x1080x24` | Resolution of the virtual desktop |
@@ -167,6 +202,7 @@ Also:
 
 - **Python execution:** Several services run arbitrary Python code (`execute_blender_code`, `execute_code` in FreeCAD, build123d), and OpenModelica's `run_script` can call shell commands via `system()`. Anyone who can reach the proxy and has the token effectively has a shell on the pod.
 - **The tailnet is the security boundary.** In userspace mode, Tailscale forwards all locally listening ports into the tailnet, including the internal bridges of Blender (9876) and FreeCAD (9875), which have no authentication of their own. The same goes for SPICEBridge's schematic viewer (`open_viewer`, port 8080 by default), which is protected by its own token. Restrict access to the pod to your own devices with a [Tailscale ACL](https://tailscale.com/kb/1018/acls).
+- **OpenCode:** Whoever logs in to OpenCode has a shell on the pod through the agent, and the agent's shell can read the token and API keys from its environment. Choose a strong `OPENCODE_PASSWORD` or keep the generated one.
 - **Browser and third-party websites:** Third-party pages may try to slip instructions to Claude (prompt injection), and the same session has tools that execute code. The pod is an isolated, disposable environment, but still: don't store important logins (Google, banking, company accounts) in the pod's browser.
 - **Don't expose ports in RunPod.** As an exception, without Tailscale: `BIND_ADDR=0.0.0.0`, expose only ports 9090 and 8090, and use a long `SANDBURG_TOKEN`. noVNC and ComfyUI stay bound to `127.0.0.1` (`UI_BIND_ADDR`) and are not reachable from outside in this mode, even if their ports are exposed.
 - **Token on your machine:** The plugin also stores the token in `~/.config/sandburg/config` (readable only by you) so the `sandburg` command can use it.
@@ -177,7 +213,7 @@ Inside the container (RunPod web terminal, or `tailscale ssh` with `TS_EXTRA_ARG
 
 ```bash
 sandburg-status                         # processes, ports, proxy status, Tailscale, GPU
-tail -f /var/log/sandburg/blender.log   # or freecad.log, comfyui.log (incl. setup), voice-setup.log
+tail -f /var/log/sandburg/blender.log   # or freecad.log, comfyui.log (incl. setup), voice-setup.log, opencode.log
 supervisorctl -c /opt/sandburg/supervisord.conf restart blender
 ```
 
@@ -187,6 +223,7 @@ Locally: `sandburg status` checks whether the pod is reachable and the token is 
 - **FreeCAD tools don't respond:** Check that port 9875 is listening. On the desktop, open the *MCP Addon* workbench and click *Start RPC Server*. Close any first-run dialog that may be open.
 - **ComfyUI doesn't respond after the first start:** PyTorch is still being installed on the volume, see `comfyui.log`. Voice waits for this setup and vice versa.
 - **Voice doesn't respond:** Setup is still running or has failed, see `voice-setup.log`. The proxy retries the connection every 15 seconds.
+- **OpenCode is missing a service's tools:** OpenCode only connects to the MCP servers when it starts. Restart it (`supervisorctl … restart opencode`) once the service is ready. `/var/log/sandburg/opencode.log` lists the configured servers.
 - **Browser doesn't start:** A crashed browser sometimes leaves a profile lock behind. It is cleaned up on the next start. If all else fails, delete `/workspace/.sandburg/browser-profile`.
 - **Without a GPU:** ComfyUI runs with `--cpu`, Cycles on the CPU, Voice much slower. The GUIs use Mesa on the CPU anyway, which is normal under Xvfb.
 
@@ -194,7 +231,7 @@ Locally: `sandburg status` checks whether the pod is reachable and the token is 
 
 | Path | Contents |
 |---|---|
-| `Dockerfile`, `rootfs/` | Image, startup scripts, supervisord and proxy configuration |
+| `Dockerfile`, `rootfs/` | Image, startup scripts, supervisord and proxy configuration, OpenCode instructions (`rootfs/opt/sandburg/opencode/AGENTS.md`) |
 | `servers/` | Custom MCP servers: Inkscape, OpenModelica, Voice, placeholder for disabled services |
 | `plugin/`, `.claude-plugin/marketplace.json` | Claude Code plugin and its catalog |
 | `client/mcp.json.example` | Manual setup without the plugin |

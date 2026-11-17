@@ -18,7 +18,7 @@ done
 known_vars=" SANDBURG_TOKEN SANDBURG_PROJECTS TS_AUTHKEY TS_HOSTNAME TS_EXTRA_ARGS TS_STATE_DIR
     ENABLE_BLENDER ENABLE_FREECAD ENABLE_KICAD ENABLE_BUILD123D ENABLE_INKSCAPE ENABLE_BROWSER
     ENABLE_OPENMODELICA ENABLE_NGSPICE
-    ENABLE_COMFYUI ENABLE_COMFYUI_3D ENABLE_VNC ENABLE_FILES ENABLE_VOICE
+    ENABLE_COMFYUI ENABLE_COMFYUI_3D ENABLE_VNC ENABLE_FILES ENABLE_VOICE ENABLE_OPENCODE
     VOICE_IDLE_MINUTES VOICE_WHISPER_MODEL VOICE_VENV "
 known_vars="${known_vars//$'\n'/ }"
 while IFS= read -r name; do
@@ -103,7 +103,7 @@ if [ -n "${TS_AUTHKEY:-}" ] && ! is_loopback "${BIND_ADDR}"; then
     log "WARNING: BIND_ADDR=${BIND_ADDR} while Tailscale is active. Tailscale already forwards to 127.0.0.1, so this only makes the MCP proxy and file server reachable outside the tailnet. Leave BIND_ADDR at 127.0.0.1."
 fi
 if ! is_loopback "${UI_BIND_ADDR:-127.0.0.1}"; then
-    log "WARNING: UI_BIND_ADDR=${UI_BIND_ADDR}: noVNC and ComfyUI listen beyond localhost, and ComfyUI has no authentication. Only meant for local docker compose; never expose ports 6080 or 8188."
+    log "WARNING: UI_BIND_ADDR=${UI_BIND_ADDR}: noVNC, ComfyUI and OpenCode listen beyond localhost, and ComfyUI has no authentication. Only meant for local docker compose; never expose ports 6080, 8188 or 4096."
 fi
 
 # --- Summary in the container log --------------------------------------------
@@ -134,6 +134,9 @@ servers="$(jq -r '.mcpServers | to_entries[] | select(.value.command != "/usr/lo
     fi
     if enabled ENABLE_COMFYUI; then
         echo " ComfyUI web UI: http://${host}:8188"
+    fi
+    if enabled ENABLE_OPENCODE; then
+        echo " OpenCode (agent in the browser): http://${host}:4096  user: opencode, password: ${WORKSPACE}/.opencode-password (or env OPENCODE_PASSWORD)"
     fi
     if enabled ENABLE_VOICE; then
         echo " Voice: set up on first start (log: /var/log/sandburg/voice-setup.log)"
