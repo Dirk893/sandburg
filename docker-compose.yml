@@ -27,10 +27,11 @@ services:
       - "127.0.0.1:6080:6080"
       - "127.0.0.1:8188:8188"
     shm_size: 8gb
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+    # GPUs via CDI: the device nodes become part of the container spec. With the
+    # classic "driver: nvidia" hook on cgroup v2 + the systemd cgroup driver, every
+    # "systemctl daemon-reload" on the host (e.g. from apt) revokes the container's
+    # access to /dev/nvidia*, and NVML then fails with "Unknown Error" until the
+    # container is recreated. Needs the CDI spec from the NVIDIA Container Toolkit
+    # (/var/run/cdi/nvidia.yaml, check with "nvidia-ctk cdi list").
+    devices:
+      - nvidia.com/gpu=all

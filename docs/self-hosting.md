@@ -24,6 +24,8 @@ To build the image yourself instead, run `docker compose up -d --build`. Run `pu
 
 The ports are only published on `127.0.0.1`, and the volume is the `workspace/` folder next to `docker-compose.yml`.
 
+The GPUs are passed in through [CDI](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/cdi-support.html) (`nvidia.com/gpu=all`). This needs Docker 25 or newer and the CDI spec of the NVIDIA Container Toolkit, which recent versions generate on their own: `nvidia-ctk cdi list` should list `nvidia.com/gpu=all`, otherwise create it with `sudo nvidia-ctk cdi generate --output=/var/run/cdi/nvidia.yaml`. With the older `driver: nvidia` reservation, a host with cgroup v2 and the systemd cgroup driver takes the GPU away from the container on every `systemctl daemon-reload` (e.g. after package updates), and Blender, ComfyUI and `nvidia-smi` then fail with `Failed to initialize NVML: Unknown Error`. CDI avoids that. If the driver is updated, the spec has to be regenerated.
+
 ## On a server through an SSH tunnel
 
 On a GPU server you can reach over SSH, start the container exactly as [on your own machine](#on-your-own-machine), with the repository and `.env` on the server. The ports stay on the server's `127.0.0.1`, and an SSH tunnel forwards them to your machine:
