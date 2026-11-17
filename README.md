@@ -251,7 +251,7 @@ If the service depends on a GUI application, also add a startup script and a `[p
 
 ## Running locally or on your own server
 
-Sandburg also runs with `docker compose`, on your own machine or on a GPU server reached through an SSH tunnel. See [docs/self-hosting.md](docs/self-hosting.md), which also covers switching the plugin between pod, local container and server.
+Sandburg also runs with `docker compose`, on your own machine or on a GPU server reached through an SSH tunnel or inside an intranet. See [docs/self-hosting.md](docs/self-hosting.md), which also covers switching the plugin between pod, local container and server.
 
 ## Licenses
 

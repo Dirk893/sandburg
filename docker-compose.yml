@@ -3,8 +3,8 @@
 #   docker compose pull && docker compose up -d   (prebuilt image from GHCR)
 #   docker compose up -d --build                  (or build it yourself)
 #
-# Without Tailscale, everything is reachable via the ports published on 127.0.0.1,
-# e.g. http://localhost:9090/blender/mcp and
+# Without Tailscale, everything is reachable via the ports published on 127.0.0.1
+# (PUBLISH_ADDR / COMFYUI_PUBLISH_ADDR in .env), e.g. http://localhost:9090/blender/mcp and
 # http://localhost:6080/vnc.html, files at http://localhost:8090,
 # OpenCode (ENABLE_OPENCODE=1) at http://localhost:4096
 services:
@@ -15,7 +15,8 @@ services:
     env_file: .env
     environment:
       # Listen on all interfaces inside the container so Docker can publish the
-      # ports. The "127.0.0.1:" prefix below keeps them local to the host.
+      # ports. The host address below (PUBLISH_ADDR, default 127.0.0.1) decides
+      # who can reach them.
       BIND_ADDR: 0.0.0.0
       # Same for noVNC, ComfyUI and OpenCode. Never do this on a cloud pod: ComfyUI has
       # no authentication.
@@ -23,11 +24,13 @@ services:
     volumes:
       - ./workspace:/workspace
     ports:
-      - "127.0.0.1:9090:9090"
-      - "127.0.0.1:8090:8090"
-      - "127.0.0.1:6080:6080"
-      - "127.0.0.1:8188:8188"
-      - "127.0.0.1:4096:4096"
+      # Token / password protected: MCP, files, noVNC, OpenCode
+      - "${PUBLISH_ADDR:-127.0.0.1}:9090:9090"
+      - "${PUBLISH_ADDR:-127.0.0.1}:8090:8090"
+      - "${PUBLISH_ADDR:-127.0.0.1}:6080:6080"
+      - "${PUBLISH_ADDR:-127.0.0.1}:4096:4096"
+      # ComfyUI has no authentication, hence its own address
+      - "${COMFYUI_PUBLISH_ADDR:-127.0.0.1}:8188:8188"
     shm_size: 8gb
     # GPUs via CDI: the device nodes become part of the container spec. With the
     # classic "driver: nvidia" hook on cgroup v2 + the systemd cgroup driver, every
