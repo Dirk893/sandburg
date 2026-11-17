@@ -44,6 +44,7 @@ jq '{
     "$schema": "https://opencode.ai/config.json",
     autoupdate: false,
     share: "disabled",
+    snapshot: false,
     instructions: ["/opt/sandburg/opencode/AGENTS.md"],
     mcp: (.mcpServers
         | with_entries(select(.value.command != "/usr/local/bin/sandburg-disabled-mcp"))
@@ -62,7 +63,33 @@ log "MCP servers: $(jq -r '.mcp | keys | join(" ")' "${config}")"
 wait_for_port 9090 120 || log "WARNING: MCP proxy not reachable on port 9090 – the tools will be missing"
 
 cd "${WORKSPACE}/projects"
-# "serve" serves the same web UI as "web" without trying to open a browser.
-# Password-protected, but it gives a shell on the pod, so it follows UI_BIND_ADDR
-# (local only by default; Tailscale forwards to 127.0.0.1 anyway).
-exec /usr/local/bin/opencode serve --hostname "${UI_BIND_ADDR:-127.0.0.1}" --port 4096
+# OpenCode only treats a git repository with at least one commit as a project of
+# its own. Otherwise everything lands in its "global" project with worktree "/",
+# and the web UI's "New session" button does nothing. Snapshots are off (above),
+# so OpenCode doesn't copy renders and ComfyUI output into git before every step.
+if ! git rev-parse --verify -q HEAD > /dev/null 2>&1; then
+    [ -d .git ] || git init -q
+    git -c user.name=Sandburg -c user.email=sandburg@localhost \
+        commit -q --allow-empty -m "Sandburg projects"
+    log "Initialized ${WORKSPACE}/projects as a git repository for OpenCode"
+fi
+
+# "serve" serves the same web UI as "web" without trying to open a browser. It
+# only listens locally; the proxy in front of it (proxy.mjs) takes port 4096 and
+# adds /files/ for images in the chat. Password-protected, but it gives a shell
+# on the pod, so the proxy follows UI_BIND_ADDR (local only by default;
+# Tailscale forwards to 127.0.0.1 anyway).
+/usr/local/bin/opencode serve --hostname 127.0.0.1 --port 4097 &
+opencode_pid=$!
+PROXY_HOST="${UI_BIND_ADDR:-127.0.0.1}" PROXY_PORT=4096 UPSTREAM_PORT=4097 \
+    FILES_ROOT="${WORKSPACE}/projects" node /opt/sandburg/opencode/proxy.mjs &
+proxy_pid=$!
+
+# supervisord stops the whole process group; if one of the two exits on its
+# own, stop the other too so supervisord restarts both.
+trap 'kill -TERM "${opencode_pid}" "${proxy_pid}" 2> /dev/null; wait' TERM INT
+wait -n "${opencode_pid}" "${proxy_pid}" || true
+log "OpenCode or its proxy exited – restarting both"
+kill -TERM "${opencode_pid}" "${proxy_pid}" 2> /dev/null || true
+wait || true
+exit 1

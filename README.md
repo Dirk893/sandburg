@@ -98,7 +98,8 @@ As an alternative to Claude Code, the Sandburg can run [OpenCode](https://openco
 
 1. Set `ENABLE_OPENCODE=1` on the pod, and optionally `OPENCODE_PASSWORD`. Otherwise a password is generated and stored in `/workspace/.opencode-password`.
 2. Open `http://sandburg:4096` and log in as user `opencode` with that password.
-3. Choose a provider and model in OpenCode and enter the API key. The key is stored on the volume. Alternatively, set the provider's usual variable on the pod, e.g. `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` or `GEMINI_API_KEY`.
+3. On first use in a browser, click **Add project** and open `/workspace/projects`. Until a project is open, *New session* does nothing. The browser remembers the project.
+4. Choose a provider and model in OpenCode and enter the API key. The key is stored on the volume. Alternatively, set the provider's usual variable on the pod, e.g. `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` or `GEMINI_API_KEY`.
 
 All enabled services are preconfigured as MCP servers, and OpenCode receives the same instructions as the plugin's skill (folders, which service for what), adapted for working on the pod. The agent also has a shell on the pod and works directly in `/workspace/projects`. You fetch results through the [file server](#5-exchange-files), and sessions persist on the volume under `/workspace/.sandburg/opencode`.
 

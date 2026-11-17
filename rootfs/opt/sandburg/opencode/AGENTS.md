@@ -36,14 +36,24 @@ Never save results to `/tmp` or the home directory, otherwise the user cannot ge
 Blender and FreeCAD execute Python; always give save and export paths there as absolute paths
 under `/workspace/projects/...`.
 
-## Handing over files
+## Showing and handing over files
 
-The user downloads and uploads through the file server at `http://<sandburg>:8090` (in the
-browser or as a WebDAV drive). Paths there are relative to `/workspace/projects`.
+Every file under `/workspace/projects/` is reachable in this chat at `/files/<path relative to
+/workspace/projects>`. Use these relative links exactly like that, without a host:
 
-- **The result is finished:** save or export it to the matching folder, then name the path
-  relative to `/workspace/projects` (for example `freecad/enclosure.stl`), so the user can find
-  it in the file server.
+- **Images** (plots, renders, previews, screenshots: PNG, JPG, SVG, WebP, GIF): show them in your
+  answer as Markdown images, e.g. `![Error vs. current](/files/openmodelica/plots/error.png)`.
+  Tool results with images are only visible to you, not to the user, so always embed the
+  images you want the user to see.
+- **Other results** (STL, STEP, Gerber, .blend, CSV, audio …): link them for download, e.g.
+  `[enclosure.stl](/files/freecad/enclosure.stl)`.
+
+The user can also browse, download and upload through the file server at `http://<sandburg>:8090`
+(in the browser or as a WebDAV drive), with the same paths.
+
+- **The result is finished:** save or export it to the matching folder, then embed or link it
+  as above and name the path relative to `/workspace/projects` (for example
+  `freecad/enclosure.stl`).
 - **The user mentions a file of their own:** ask them to upload it through the file server
   (drag and drop into the right folder), then look for it under `/workspace/projects/`.
 
@@ -89,4 +99,4 @@ tell them to enable it (`ENABLE_<SERVICE>=1`, e.g. `ENABLE_VOICE=1`) and restart
 
 Look at the result before finishing: Blender `look`, FreeCAD `get_view`, build123d renders,
 Inkscape `preview`, OpenModelica `plot`, ngspice `draw_schematic`, browser screenshot. Only then
-report the result and where to find it.
+report the result, with the images embedded and the files linked.
