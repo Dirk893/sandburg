@@ -27,10 +27,10 @@ THEMES = {
 SANS = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
 MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace"
 
-W, H = 1200, 700
-LEFT = (24, 30, 300, 646)
-BAND = (344, 30, 66, 646)
-POD = (430, 30, 746, 646)
+W, H = 1200, 760
+LEFT = (24, 30, 300, 706)
+BAND = (344, 30, 66, 706)
+POD = (430, 30, 746, 706)
 BAND_X = BAND[0] + BAND[2] / 2
 
 SERVICES = [
@@ -48,10 +48,11 @@ SERVICES = [
 ]
 
 PORTS = [
-    # y center, port, name, detail, protocol, client
-    (509, ":8090", "dufs file server", "/workspace/projects over HTTP and WebDAV, on the volume", "HTTP"),
-    (569, ":6080", "noVNC desktop", "watch Blender, FreeCAD and the browser, step in", "VNC"),
-    (629, ":8188", "ComfyUI web UI", "build and run workflows by hand", "HTTP"),
+    # y center, port, name, detail, protocol, optional
+    (509, ":8090", "dufs file server", "/workspace/projects over HTTP and WebDAV, on the volume", "HTTP", False),
+    (569, ":6080", "noVNC desktop", "watch Blender, FreeCAD and the browser, step in", "VNC", False),
+    (629, ":8188", "ComfyUI web UI", "build and run workflows by hand", "HTTP", False),
+    (689, ":4096", "OpenCode web UI", "agent on the pod for any LLM, with all MCP servers", "HTTP", True),
 ]
 
 
@@ -89,7 +90,9 @@ def build(t):
         "Tailscale to the GPU pod. There, mcp-proxy on port 9090 routes /service/mcp with a bearer "
         "token to the MCP servers for Blender, FreeCAD, build123d, KiCad, ngspice, OpenModelica, "
         "Inkscape, ComfyUI, the browser and voice. The tailnet also reaches the file server on "
-        "port 8090, the noVNC desktop on 6080 and the ComfyUI web UI on 8188.</desc>"
+        "port 8090, the noVNC desktop on 6080, the ComfyUI web UI on 8188 and, optionally, the "
+        "OpenCode web UI on 4096, an agent on the pod for any LLM that uses the same MCP "
+        "servers.</desc>"
     )
     o.append("<defs>")
     for name, color in (("a-teal", t["teal"]), ("a-muted", t["muted"])):
@@ -114,7 +117,7 @@ def build(t):
     o.append(rect(bx, by, bw, bh, t["band"], rx=12,
                   extra=f' fill-opacity="{t["band_op"]}" stroke="{t["teal"]}" stroke-opacity="0.5" '
                         f'stroke-width="1.5" stroke-dasharray="5 5"'))
-    cy = 380
+    cy = 310
     o.append(text(BAND_X, cy, "TAILSCALE  ·  YOUR TAILNET", 12, t["teal"], 700, anchor="middle",
                   extra=f' letter-spacing="1.5" transform="rotate(-90 {BAND_X} {cy})"'))
 
@@ -138,9 +141,9 @@ def build(t):
     o.append(rect(44, 484, 260, 50, t["card"], t["stroke"], rx=12))
     o.append(text(64, 505, "sandburg command", 15, t["text"], 700))
     o.append(text(64, 523, "or Finder, Explorer, curl", 12, t["muted"]))
-    o.append(rect(44, 544, 260, 110, t["card"], t["stroke"], rx=12))
-    o.append(text(64, 594, "Your web browser", 15, t["text"], 700))
-    o.append(text(64, 613, "desktop and ComfyUI", 12, t["muted"]))
+    o.append(rect(44, 544, 260, 170, t["card"], t["stroke"], rx=12))
+    o.append(text(64, 624, "Your web browser", 15, t["text"], 700))
+    o.append(text(64, 643, "desktop, ComfyUI, OpenCode", 12, t["muted"]))
 
     # mcp-proxy
     o.append(rect(450, 84, 706, 56, t["orange_tint"], t["orange"], rx=10))
@@ -180,15 +183,17 @@ def build(t):
 
     # Ports
     o.append(text(450, 474, "ALSO IN THE TAILNET", 11, t["muted"], 700, extra=' letter-spacing="1.5"'))
-    for yc, port, name, detail, _ in PORTS:
-        o.append(rect(450, yc - 25, 706, 50, t["teal_tint"], rx=10))
+    for yc, port, name, detail, _, optional in PORTS:
+        dash = (f' stroke="{t["muted"]}" stroke-width="1.2" stroke-dasharray="5 4"'
+                if optional else "")
+        o.append(rect(450, yc - 25, 706, 50, t["teal_tint"], rx=10, extra=dash))
         o.append(text(470, yc + 5, port, 15, t["teal"], 700, MONO))
         o.append(text(536, yc + 5, name, 15, t["text"], 700))
         o.append(text(716, yc + 5, detail, 12.5, t["muted"]))
 
     # Connections across the tailnet
     o.append(arrow(304, 112, 450, t["teal"], "a-teal", "MCP", t))
-    for yc, _, _, _, proto in PORTS:
+    for yc, _, _, _, proto, _ in PORTS:
         o.append(arrow(304, yc, 450, t["muted"], "a-muted", proto, t))
 
     o.append("</svg>")

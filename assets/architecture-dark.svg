@@ -1,18 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" width="1200" height="700" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" width="1200" height="760" role="img" aria-labelledby="title desc">
 <title id="title">Sandburg architecture</title>
-<desc id="desc">Claude Code with the sandburg plugin on your machine connects through Tailscale to the GPU pod. There, mcp-proxy on port 9090 routes /service/mcp with a bearer token to the MCP servers for Blender, FreeCAD, build123d, KiCad, ngspice, OpenModelica, Inkscape, ComfyUI, the browser and voice. The tailnet also reaches the file server on port 8090, the noVNC desktop on 6080 and the ComfyUI web UI on 8188.</desc>
+<desc id="desc">Claude Code with the sandburg plugin on your machine connects through Tailscale to the GPU pod. There, mcp-proxy on port 9090 routes /service/mcp with a bearer token to the MCP servers for Blender, FreeCAD, build123d, KiCad, ngspice, OpenModelica, Inkscape, ComfyUI, the browser and voice. The tailnet also reaches the file server on port 8090, the noVNC desktop on 6080, the ComfyUI web UI on 8188 and, optionally, the OpenCode web UI on 4096, an agent on the pod for any LLM that uses the same MCP servers.</desc>
 <defs>
 <marker id="a-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#33AFC0"/></marker>
 <marker id="a-muted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#B39A84"/></marker>
 </defs>
-<rect x="0" y="0" width="1200" height="700" rx="18" fill="#17110E"/>
-<rect x="24" y="30" width="300" height="646" rx="14" fill="#211915" stroke="#3B2E26" stroke-width="1.5"/>
-<rect x="430" y="30" width="746" height="646" rx="14" fill="#211915" stroke="#3B2E26" stroke-width="1.5"/>
+<rect x="0" y="0" width="1200" height="760" rx="18" fill="#17110E"/>
+<rect x="24" y="30" width="300" height="706" rx="14" fill="#211915" stroke="#3B2E26" stroke-width="1.5"/>
+<rect x="430" y="30" width="746" height="706" rx="14" fill="#211915" stroke="#3B2E26" stroke-width="1.5"/>
 <text x="44" y="62" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#B39A84" text-anchor="start" letter-spacing="1.5">YOUR MACHINE</text>
 <text x="450" y="62" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#B39A84" text-anchor="start" letter-spacing="1.5">GPU POD</text>
 <text x="1156" y="62" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#B39A84" text-anchor="end">this Docker image on RunPod or any host with an NVIDIA GPU</text>
-<rect x="344" y="30" width="66" height="646" rx="12" fill="#33AFC0" fill-opacity="0.10" stroke="#33AFC0" stroke-opacity="0.5" stroke-width="1.5" stroke-dasharray="5 5"/>
-<text x="377.0" y="380" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#33AFC0" text-anchor="middle" letter-spacing="1.5" transform="rotate(-90 377.0 380)">TAILSCALE  ·  YOUR TAILNET</text>
+<rect x="344" y="30" width="66" height="706" rx="12" fill="#33AFC0" fill-opacity="0.10" stroke="#33AFC0" stroke-opacity="0.5" stroke-width="1.5" stroke-dasharray="5 5"/>
+<text x="377.0" y="310" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#33AFC0" text-anchor="middle" letter-spacing="1.5" transform="rotate(-90 377.0 310)">TAILSCALE  ·  YOUR TAILNET</text>
 <rect x="44" y="84" width="260" height="178" rx="12" fill="#271E19" stroke="#3B2E26" stroke-width="1.5"/>
 <text x="64" y="118" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#FCE6BF" text-anchor="start">Claude Code</text>
 <text x="64" y="140" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#B39A84" text-anchor="start">+ plugin “sandburg”</text>
@@ -28,9 +28,9 @@
 <rect x="44" y="484" width="260" height="50" rx="12" fill="#271E19" stroke="#3B2E26" stroke-width="1.5"/>
 <text x="64" y="505" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#FCE6BF" text-anchor="start">sandburg command</text>
 <text x="64" y="523" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#B39A84" text-anchor="start">or Finder, Explorer, curl</text>
-<rect x="44" y="544" width="260" height="110" rx="12" fill="#271E19" stroke="#3B2E26" stroke-width="1.5"/>
-<text x="64" y="594" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#FCE6BF" text-anchor="start">Your web browser</text>
-<text x="64" y="613" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#B39A84" text-anchor="start">desktop and ComfyUI</text>
+<rect x="44" y="544" width="260" height="170" rx="12" fill="#271E19" stroke="#3B2E26" stroke-width="1.5"/>
+<text x="64" y="624" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#FCE6BF" text-anchor="start">Your web browser</text>
+<text x="64" y="643" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="400" fill="#B39A84" text-anchor="start">desktop, ComfyUI, OpenCode</text>
 <rect x="450" y="84" width="706" height="56" rx="10" fill="#3A2516" stroke="#E8873F" stroke-width="1.5"/>
 <text x="470" y="110" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#FCE6BF" text-anchor="start">mcp-proxy</text>
 <text x="560" y="110" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="15" font-weight="700" fill="#E8873F" text-anchor="start">:9090</text>
@@ -116,6 +116,10 @@
 <text x="470" y="634" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="15" font-weight="700" fill="#33AFC0" text-anchor="start">:8188</text>
 <text x="536" y="634" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#FCE6BF" text-anchor="start">ComfyUI web UI</text>
 <text x="716" y="634" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#B39A84" text-anchor="start">build and run workflows by hand</text>
+<rect x="450" y="664" width="706" height="50" rx="10" fill="#15323A" stroke="#B39A84" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="470" y="694" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="15" font-weight="700" fill="#33AFC0" text-anchor="start">:4096</text>
+<text x="536" y="694" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#FCE6BF" text-anchor="start">OpenCode web UI</text>
+<text x="716" y="694" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="400" fill="#B39A84" text-anchor="start">agent on the pod for any LLM, with all MCP servers</text>
 <line x1="304" y1="112" x2="448" y2="112" stroke="#33AFC0" stroke-width="2" marker-end="url(#a-teal)"/>
 <rect x="360.2" y="102" width="33.6" height="20" rx="10" fill="#211915" stroke="#33AFC0" stroke-width="1.5"/>
 <text x="377.0" y="116" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="11" font-weight="600" fill="#33AFC0" text-anchor="middle">MCP</text>
@@ -128,4 +132,7 @@
 <line x1="304" y1="629" x2="448" y2="629" stroke="#B39A84" stroke-width="2" marker-end="url(#a-muted)"/>
 <rect x="356.6" y="619" width="40.8" height="20" rx="10" fill="#211915" stroke="#B39A84" stroke-width="1.5"/>
 <text x="377.0" y="633" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="11" font-weight="600" fill="#B39A84" text-anchor="middle">HTTP</text>
+<line x1="304" y1="689" x2="448" y2="689" stroke="#B39A84" stroke-width="2" marker-end="url(#a-muted)"/>
+<rect x="356.6" y="679" width="40.8" height="20" rx="10" fill="#211915" stroke="#B39A84" stroke-width="1.5"/>
+<text x="377.0" y="693" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="11" font-weight="600" fill="#B39A84" text-anchor="middle">HTTP</text>
 </svg>

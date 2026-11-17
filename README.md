@@ -10,7 +10,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/architecture-dark.svg">
-    <img src="assets/architecture.svg" alt="Architecture: Claude Code with the sandburg plugin on your machine connects through Tailscale to mcp-proxy on port 9090 of the GPU pod, which routes to the MCP servers for Blender, FreeCAD, build123d, KiCad, ngspice, OpenModelica, Inkscape, ComfyUI, the browser and voice. The tailnet also reaches the file server (8090), the noVNC desktop (6080) and the ComfyUI web UI (8188).">
+    <img src="assets/architecture.svg" alt="Architecture: Claude Code with the sandburg plugin on your machine connects through Tailscale to mcp-proxy on port 9090 of the GPU pod, which routes to the MCP servers for Blender, FreeCAD, build123d, KiCad, ngspice, OpenModelica, Inkscape, ComfyUI, the browser and voice. The tailnet also reaches the file server (8090), the noVNC desktop (6080), the ComfyUI web UI (8188) and, optionally, the OpenCode web UI (4096), an agent on the pod for any LLM that uses the same MCP servers.">
   </picture>
 </p>
 
