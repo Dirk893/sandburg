@@ -1,12 +1,12 @@
 // Small reverse proxy in front of the OpenCode web UI (port 4096 -> OpenCode on
-// 127.0.0.1:4097). It adds two things OpenCode can't do itself:
+// 127.0.0.1:4097). It adds one thing OpenCode can't do itself:
 //  - /files/<path> serves files from /workspace/projects on the same origin, so
 //    the agent can show plots and renders in the chat as Markdown images
 //    (OpenCode's CSP only allows images from its own origin, https: and data:).
-//  - /sandburg/init.js, loaded into every page, opens /workspace/projects as
-//    the project in a browser that has none yet.
 // Everything else, including SSE and WebSockets, goes through unchanged, and
-// OpenCode checks the login itself. /files checks the same credentials.
+// OpenCode checks the login itself. For /files the proxy asks OpenCode whether
+// the request is logged in (password, session cookie or token), so both accept
+// the same logins.
 import http from "node:http";
 import net from "node:net";
 import fs from "node:fs";
@@ -16,9 +16,6 @@ const LISTEN_HOST = process.env.PROXY_HOST || "127.0.0.1";
 const LISTEN_PORT = Number(process.env.PROXY_PORT || 4096);
 const UPSTREAM_PORT = Number(process.env.UPSTREAM_PORT || 4097);
 const ROOT = path.resolve(process.env.FILES_ROOT || "/workspace/projects");
-const AUTH = "Basic " + Buffer.from(
-    `${process.env.OPENCODE_SERVER_USERNAME || "opencode"}:${process.env.OPENCODE_SERVER_PASSWORD}`,
-).toString("base64");
 
 const TYPES = {
     ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif",
@@ -27,25 +24,35 @@ const TYPES = {
     ".pdf": "application/pdf", ".txt": "text/plain; charset=utf-8", ".csv": "text/plain; charset=utf-8",
 };
 
-const INIT_JS = `try {
-  var k = "opencode.global.dat:server", dir = ${JSON.stringify(ROOT)};
-  var s = JSON.parse(localStorage.getItem(k) || "null");
-  if (!s || !s.projects || !s.projects.local || s.projects.local.length === 0) {
-    s = s || {};
-    s.list = s.list || [];
-    s.projects = s.projects || {};
-    s.projects.local = [{ worktree: dir, expanded: true }];
-    s.lastProject = s.lastProject || {};
-    s.lastProject.local = dir;
-    s.recentlyClosed = s.recentlyClosed || {};
-    localStorage.setItem(k, JSON.stringify(s));
-  }
-} catch (e) {}
-`;
+// Resolves to the status of an authenticated OpenCode endpoint for the
+// request's credentials: 200 = logged in, 401 = not.
+function checkLogin(req) {
+    const headers = {};
+    for (const h of ["authorization", "cookie", "host", "origin"]) {
+        if (req.headers[h] !== undefined) headers[h] = req.headers[h];
+    }
+    return new Promise((resolve) => {
+        const up = http.request(
+            { host: "127.0.0.1", port: UPSTREAM_PORT, method: "GET", path: "/api/info", headers },
+            (upRes) => {
+                upRes.resume();
+                resolve(upRes.statusCode);
+            },
+        );
+        up.setTimeout(10000, () => up.destroy());
+        up.on("error", () => resolve(502));
+        up.end();
+    });
+}
 
-function serveFile(req, res, urlPath) {
-    if (req.headers.authorization !== AUTH) {
-        res.writeHead(401, { "WWW-Authenticate": 'Basic realm="Secure Area"' });
+async function serveFile(req, res, urlPath) {
+    const status = await checkLogin(req);
+    if (status !== 200) {
+        if (status === 401) {
+            res.writeHead(401, { "WWW-Authenticate": 'Basic realm="Secure Area"' });
+        } else {
+            res.writeHead(502);
+        }
         return res.end();
     }
     let rel;
@@ -83,28 +90,11 @@ function serveFile(req, res, urlPath) {
 }
 
 function proxy(req, res) {
-    const wantsHtml = req.method === "GET" && (req.headers.accept || "").includes("text/html");
-    const headers = { ...req.headers };
-    // Uncompressed, so the script tag can be added to the page
-    if (wantsHtml) headers["accept-encoding"] = "identity";
     const up = http.request(
-        { host: "127.0.0.1", port: UPSTREAM_PORT, method: req.method, path: req.url, headers },
+        { host: "127.0.0.1", port: UPSTREAM_PORT, method: req.method, path: req.url, headers: req.headers },
         (upRes) => {
-            const isHtml = wantsHtml && (upRes.headers["content-type"] || "").includes("text/html");
-            if (!isHtml) {
-                res.writeHead(upRes.statusCode, upRes.headers);
-                return upRes.pipe(res);
-            }
-            const chunks = [];
-            upRes.on("data", (c) => chunks.push(c));
-            upRes.on("end", () => {
-                const html = Buffer.concat(chunks).toString("utf8")
-                    .replace(/<head([^>]*)>/i, '<head$1><script src="/sandburg/init.js"></script>');
-                const out = { ...upRes.headers, "content-length": Buffer.byteLength(html) };
-                delete out["content-encoding"];
-                res.writeHead(upRes.statusCode, out);
-                res.end(html);
-            });
+            res.writeHead(upRes.statusCode, upRes.headers);
+            upRes.pipe(res);
         },
     );
     up.on("error", () => {
@@ -118,10 +108,6 @@ const server = http.createServer((req, res) => {
     const urlPath = req.url.split("?")[0];
     if ((req.method === "GET" || req.method === "HEAD") && urlPath.startsWith("/files/")) {
         return serveFile(req, res, urlPath);
-    }
-    if (req.method === "GET" && urlPath === "/sandburg/init.js") {
-        res.writeHead(200, { "Content-Type": "text/javascript; charset=utf-8", "Cache-Control": "no-cache" });
-        return res.end(INIT_JS);
     }
     proxy(req, res);
 });

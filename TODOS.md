@@ -24,7 +24,6 @@ OpenCode already runs on the pod as a web UI (`ENABLE_OPENCODE=1`, see the READM
 - **An LLM on the pod's GPU** (vLLM or Ollama as an optional service, `ENABLE_LLM=1`), preconfigured as a provider in OpenCode, so the whole setup works without any cloud LLM. GPU memory has to be shared with ComfyUI, Blender and Voice.
 - **OpenCode locally as a client** (like the Claude Code plugin): generate an `opencode.json` with `"type": "remote"` entries for `http://sandburg:9090/<service>/mcp` and `{env:SANDBURG_TOKEN}`, plus `sandburg get/put` for files, and the skill as `AGENTS.md`.
 - **Keep the instructions in one place:** `rootfs/opt/sandburg/opencode/AGENTS.md` duplicates most of `plugin/skills/sandburg/SKILL.md`. Generate both from shared parts.
-- **New MCP config format:** newer OpenCode versions have `mcp.servers` with separate `startup`/`catalog`/`execution` timeouts and mark the old format as deprecated. Switch over once the pinned version supports it.
 
 ## More cloud providers than RunPod
 

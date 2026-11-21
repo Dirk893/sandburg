@@ -19,10 +19,10 @@ if [ -z "${OPENCODE_PASSWORD:-}" ]; then
         log "Generated OpenCode password: ${pw_file}"
     fi
 fi
-# Without it OpenCode would run without any authentication.
+# Without it OpenCode would generate a new password on every start. OpenCode
+# reads it from OPENCODE_PASSWORD and keeps it out of the agent's shell.
 [ -n "${OPENCODE_PASSWORD}" ] || { log "ERROR: empty OpenCode password"; exit 1; }
-export OPENCODE_SERVER_PASSWORD="${OPENCODE_PASSWORD}"
-unset OPENCODE_PASSWORD
+export OPENCODE_PASSWORD
 
 # --- Sessions, API keys and settings on the volume ---------------------------
 # Linked instead of changing XDG_* so the programs the agent starts from its
@@ -39,34 +39,40 @@ done
 # --- Config: the enabled MCP servers from the proxy config -------------------
 # The token is not written into the file; OpenCode substitutes {env:…} itself.
 # The tool timeout follows the proxy's timeout for the service ("15m" -> ms).
+# Starting and listing tools gets two minutes: services such as Blender load
+# their bridge on the first connection. With Code Mode (OpenCode's default) the
+# model doesn't get a few hundred tool definitions up front.
 config=/run/sandburg/opencode.json
 jq '{
     "$schema": "https://opencode.ai/config.json",
-    autoupdate: false,
+    update: "disable",
     share: "disabled",
-    snapshot: false,
+    snapshots: false,
     instructions: ["/opt/sandburg/opencode/AGENTS.md"],
-    mcp: (.mcpServers
-        | with_entries(select(.value.command != "/usr/local/bin/sandburg-disabled-mcp"))
-        | with_entries(.value = {
-            type: "remote",
-            url: "http://127.0.0.1:9090/\(.key)/mcp",
-            headers: {Authorization: "Bearer {env:SANDBURG_TOKEN}"},
-            oauth: false,
-            timeout: ((.value.timeout // "10m") | if endswith("m") then (rtrimstr("m") | tonumber * 60000) else 600000 end)
-        }))
+    mcp: {
+        timeout: {startup: 120000, catalog: 120000},
+        servers: (.mcpServers
+            | with_entries(select(.value.command != "/usr/local/bin/sandburg-disabled-mcp"))
+            | with_entries(.value = {
+                type: "remote",
+                url: "http://127.0.0.1:9090/\(.key)/mcp",
+                headers: {Authorization: "Bearer {env:SANDBURG_TOKEN}"},
+                oauth: false,
+                timeout: {execution: ((.value.timeout // "10m") | if endswith("m") then (rtrimstr("m") | tonumber * 60000) else 600000 end)}
+            }))
+    }
 }' /run/sandburg/mcp-proxy.json > "${config}"
 export OPENCODE_CONFIG="${config}"
-log "MCP servers: $(jq -r '.mcp | keys | join(" ")' "${config}")"
+log "MCP servers: $(jq -r '.mcp.servers | keys | join(" ")' "${config}")"
 
 # OpenCode connects to the MCP servers once at startup.
 wait_for_port 9090 120 || log "WARNING: MCP proxy not reachable on port 9090 – the tools will be missing"
 
 cd "${WORKSPACE}/projects"
-# OpenCode only treats a git repository with at least one commit as a project of
-# its own. Otherwise everything lands in its "global" project with worktree "/",
-# and the web UI's "New session" button does nothing. Snapshots are off (above),
-# so OpenCode doesn't copy renders and ComfyUI output into git before every step.
+# OpenCode identifies a project by the first commit of its git repository, so
+# give /workspace/projects one. The server runs in it, which makes it the
+# server's default location. Snapshots are off (above), so OpenCode doesn't
+# copy renders and ComfyUI output into git before every step.
 if ! git rev-parse --verify -q HEAD > /dev/null 2>&1; then
     [ -d .git ] || git init -q
     git -c user.name=Sandburg -c user.email=sandburg@localhost \
@@ -74,11 +80,12 @@ if ! git rev-parse --verify -q HEAD > /dev/null 2>&1; then
     log "Initialized ${WORKSPACE}/projects as a git repository for OpenCode"
 fi
 
-# "serve" serves the same web UI as "web" without trying to open a browser. It
-# only listens locally; the proxy in front of it (proxy.mjs) takes port 4096 and
-# adds /files/ for images in the chat. Password-protected, but it gives a shell
-# on the pod, so the proxy follows UI_BIND_ADDR (local only by default;
-# Tailscale forwards to 127.0.0.1 anyway).
+# "serve" runs OpenCode's server, including its web UI, in the foreground
+# instead of as a background service. It only listens locally; the proxy in
+# front of it (proxy.mjs) takes port 4096 and adds /files/ for images in the
+# chat. Password-protected, but it gives a shell on the pod, so the proxy
+# follows UI_BIND_ADDR (local only by default; Tailscale forwards to 127.0.0.1
+# anyway).
 /usr/local/bin/opencode serve --hostname 127.0.0.1 --port 4097 &
 opencode_pid=$!
 PROXY_HOST="${UI_BIND_ADDR:-127.0.0.1}" PROXY_PORT=4096 UPSTREAM_PORT=4097 \

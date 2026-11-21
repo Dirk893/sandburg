@@ -97,9 +97,8 @@ Without MagicDNS, enter the pod's 100.x IP instead of `sandburg` (`tailscale sta
 As an alternative to Claude Code, the Sandburg can run [OpenCode](https://opencode.ai) itself: a coding agent with a web interface that works with any LLM (OpenRouter, OpenAI, Anthropic, Gemini, an OpenAI-compatible endpoint …). Nothing needs to be installed on your machine; a browser in the tailnet is enough.
 
 1. Set `ENABLE_OPENCODE=1` on the pod, and optionally `OPENCODE_PASSWORD`. Otherwise a password is generated and stored in `/workspace/.opencode-password`.
-2. Open `http://sandburg:4096` and log in as user `opencode` with that password.
-3. On first use in a browser, click **Add project** and open `/workspace/projects`. Until a project is open, *New session* does nothing. The browser remembers the project.
-4. Choose a provider and model in OpenCode and enter the API key. The key is stored on the volume. Alternatively, set the provider's usual variable on the pod, e.g. `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` or `GEMINI_API_KEY`.
+2. Open `http://sandburg:4096` and log in as user `opencode` with that password. OpenCode works in `/workspace/projects`.
+3. Choose a provider and model in OpenCode and enter the API key. The key is stored on the volume. Alternatively, set the provider's usual variable on the pod, e.g. `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` or `GEMINI_API_KEY`.
 
 All enabled services are preconfigured as MCP servers, and OpenCode receives the same instructions as the plugin's skill (folders, which service for what), adapted for working on the pod. The agent also has a shell on the pod and works directly in `/workspace/projects`. You fetch results through the [file server](#5-exchange-files), and sessions persist on the volume under `/workspace/.sandburg/opencode`.
 
@@ -108,20 +107,22 @@ Your own settings, such as a custom provider, belong in `/workspace/projects/ope
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "provider": {
-    "ollama": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Ollama",
-      "options": { "baseURL": "https://ollama.example.com/v1" },
+  "providers": {
+    "myllm": {
+      "name": "My LLM",
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": { "baseURL": "https://llm.example.com/v1" },
       "models": { "qwen3-coder:30b": { "name": "Qwen3 Coder 30B" } }
     }
   }
 }
 ```
 
+The Sandburg uses OpenCode 2, whose configuration differs from version 1 (`providers` instead of `provider`, `package` instead of `npm`, `settings` instead of `options`). See [OpenCode's providers documentation](https://opencode.ai/docs/providers).
+
 Notes:
 
-- **Model choice:** All services together expose a few hundred tools. Strong models with reliable tool calling cope well; small local models often don't. Disable services you don't need (`ENABLE_…=0`), and they disappear from OpenCode as well.
+- **Model choice:** All services together expose a few hundred tools. OpenCode's Code Mode keeps their definitions out of the model's context until they are needed, but the model still has to use them reliably: strong models cope well, small local models often don't. Disable services you don't need (`ENABLE_…=0`), and they disappear from OpenCode as well.
 - **Ollama on your own machine** can't be reached from the pod through the tailnet yet, because Tailscale runs in userspace mode there and doesn't route outgoing connections into the tailnet. Cloud APIs and publicly reachable endpoints work.
 - OpenCode connects to the MCP servers when it starts. If a service only becomes ready later (Voice on first start), restart OpenCode: `supervisorctl -c /opt/sandburg/supervisord.conf restart opencode`.
 
