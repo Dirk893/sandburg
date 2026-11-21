@@ -81,22 +81,7 @@ if ! git rev-parse --verify -q HEAD > /dev/null 2>&1; then
 fi
 
 # "serve" runs OpenCode's server, including its web UI, in the foreground
-# instead of as a background service. It only listens locally; the proxy in
-# front of it (proxy.mjs) takes port 4096 and adds /files/ for images in the
-# chat. Password-protected, but it gives a shell on the pod, so the proxy
-# follows UI_BIND_ADDR (local only by default; Tailscale forwards to 127.0.0.1
-# anyway).
-/usr/local/bin/opencode serve --hostname 127.0.0.1 --port 4097 &
-opencode_pid=$!
-PROXY_HOST="${UI_BIND_ADDR:-127.0.0.1}" PROXY_PORT=4096 UPSTREAM_PORT=4097 \
-    FILES_ROOT="${WORKSPACE}/projects" node /opt/sandburg/opencode/proxy.mjs &
-proxy_pid=$!
-
-# supervisord stops the whole process group; if one of the two exits on its
-# own, stop the other too so supervisord restarts both.
-trap 'kill -TERM "${opencode_pid}" "${proxy_pid}" 2> /dev/null; wait' TERM INT
-wait -n "${opencode_pid}" "${proxy_pid}" || true
-log "OpenCode or its proxy exited – restarting both"
-kill -TERM "${opencode_pid}" "${proxy_pid}" 2> /dev/null || true
-wait || true
-exit 1
+# instead of as a background service. Password-protected, but it gives a shell
+# on the pod, so it follows UI_BIND_ADDR (local only by default; Tailscale
+# forwards to 127.0.0.1 anyway).
+exec /usr/local/bin/opencode serve --hostname "${UI_BIND_ADDR:-127.0.0.1}" --port 4096

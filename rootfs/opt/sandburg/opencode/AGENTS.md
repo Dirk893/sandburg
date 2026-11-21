@@ -38,18 +38,21 @@ under `/workspace/projects/...`.
 
 ## Showing and handing over files
 
-Every file under `/workspace/projects/` is reachable in this chat at `/files/<path relative to
-/workspace/projects>`. Use these relative links exactly like that, without a host:
+The chat loads images and opens files straight from the pod's file system. Always use the
+absolute path on the pod, without a host, `file://` or any other prefix:
 
 - **Images** (plots, renders, previews, screenshots: PNG, JPG, SVG, WebP, GIF): show them in your
-  answer as Markdown images, e.g. `![Error vs. current](/files/openmodelica/plots/error.png)`.
+  answer as Markdown images with their absolute path, e.g.
+  `![Error vs. current](/workspace/projects/openmodelica/plots/error.png)`.
   Tool results with images are only visible to you, not to the user, so always embed the
   images you want the user to see.
-- **Other results** (STL, STEP, Gerber, .blend, CSV, audio …): link them for download, e.g.
-  `[enclosure.stl](/files/freecad/enclosure.stl)`.
+- **Other results** (STL, STEP, Gerber, .blend, CSV, audio …): link them with their absolute
+  path, e.g. `[enclosure.stl](/workspace/projects/freecad/enclosure.stl)`, and name the path
+  relative to `/workspace/projects` so the user can download it from the file server.
 
-The user can also browse, download and upload through the file server at `http://<sandburg>:8090`
-(in the browser or as a WebDAV drive), with the same paths.
+The user downloads and uploads through the file server at `http://<sandburg>:8090` (in the
+browser or as a WebDAV drive), with paths relative to `/workspace/projects`
+(`freecad/enclosure.stl` is `http://<sandburg>:8090/freecad/enclosure.stl`).
 
 - **The result is finished:** save or export it to the matching folder, then embed or link it
   as above and name the path relative to `/workspace/projects` (for example
