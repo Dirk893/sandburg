@@ -5,7 +5,9 @@
   </picture>
 </p>
 
-**A workshop in the cloud for Claude Code.** Sandburg is a Docker image with Blender, FreeCAD, KiCad, build123d, Inkscape, OpenModelica, ngspice, ComfyUI, a browser and optional speech output, each with a ready-to-use MCP server. You start it on a GPU cloud such as RunPod, it joins your tailnet, and your local Claude Code works with it as if the programs were installed on your machine. A Claude Code plugin wires everything up with a single command, and Claude downloads finished files to you on its own. Without Claude Code, [OpenCode in the browser](#opencode-in-the-browser) runs on the pod itself and works with any LLM.
+**A workshop in the cloud for Claude Code.** Sandburg is a Docker image with Blender, FreeCAD, KiCad, build123d, Inkscape, OpenModelica, ngspice, OpenECraft, ComfyUI, a browser and optional speech output, each with a ready-to-use MCP server. You start it on a GPU cloud such as RunPod, it joins your tailnet, and your local Claude Code works with it as if the programs were installed on your machine. A Claude Code plugin wires everything up with a single command, and Claude downloads finished files to you on its own. Without Claude Code, [OpenCode in the browser](#opencode-in-the-browser) runs on the pod itself and works with any LLM.
+
+> This is a fork of [trn84/sandburg](https://github.com/trn84/sandburg) that adds [OpenECraft](https://openecraft.org) (electrical CAE) as an additional service. Everything else follows the original.
 
 <p align="center">
   <picture>
@@ -25,6 +27,7 @@
 | **Inkscape** (current stable release) | Check and view SVGs, convert text to paths, export to DXF/PDF/PNG, vectorize images | custom server (`servers/inkscape-mcp`) | on |
 | **OpenModelica** (current release, compiler `omc` without GUI) | Model and simulate physical systems in Modelica (electrical, mechanical, thermal, control) with the Modelica Standard Library, plots as images | custom server (`servers/openmodelica-mcp`) | on |
 | **ngspice** 42 | Circuit simulation: AC, transient, DC operating point, measurements, Monte Carlo and worst case, export to KiCad schematics | [SPICEBridge](https://github.com/clanker-lover/spicebridge) 1.3.0 | on |
+| **OpenECraft** 0.1.0 (command line `openecraft-cli`, no GUI) | Electrical CAE: circuit diagrams with cross references and IEC 81346 designations, terminal and cable plans, bills of materials, control cabinet layout, PDF/DXF export | built-in MCP server of [OpenECraft](https://openecraft.org) (`openecraft-cli mcp`) | on |
 | **Browser** (Chromium) | Operate websites, download files straight to the pod, view your own HTML output | [Playwright MCP](https://github.com/microsoft/playwright-mcp) 0.0.83 | on |
 | **ComfyUI** | Generate images; with `ENABLE_COMFYUI_3D=1` also image-to-3D (Hunyuan3D 2.1) | [comfy-mcp](https://github.com/Comfy-Org/comfy-mcp) 0.10.0 (official) | on, 3D off |
 | **Voice** | Speech output (English, Spanish, French, Hindi, Italian, Portuguese, Chinese), transcription and subtitles | custom server (`servers/voice-mcp`) with [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) and Whisper | off |
@@ -159,6 +162,7 @@ Also:
 |---|---|
 | `projects/blender`, `freecad`, `kicad`, `build123d`, `inkscape`, `openmodelica` | Working directories of the respective services |
 | `projects/ngspice/circuits` | One folder per ngspice circuit: netlist, raw data, schematic, KiCad export |
+| `projects/openecraft` | OpenECraft projects and exports; the only folder its tools may access |
 | `projects/comfyui/input`, `projects/comfyui/output` | ComfyUI inputs and results (3D models under `output/mesh`) |
 | `projects/browser` | Browser downloads and screenshots |
 | `projects/audio` | Speech output, `transcripts/` |
@@ -186,7 +190,7 @@ Also:
 | `TS_STATE_DIR` | – (in memory) | Keep the Tailscale node across restarts, e.g. `/workspace/.tailscale`. Without it the pod logs out when it stops and leaves the tailnet immediately |
 | `SANDBURG_TOKEN` | generated | Token for the MCP proxy and file server. At least 16 characters, only `A-Z a-z 0-9 . _ ~ -` |
 | `VNC_PASSWORD` | generated | Password for the desktop |
-| `ENABLE_BLENDER`, `_FREECAD`, `_KICAD`, `_BUILD123D`, `_INKSCAPE`, `_OPENMODELICA`, `_NGSPICE`, `_BROWSER`, `_COMFYUI`, `_VNC`, `_FILES` | `1` | Disable individual services (`0`) |
+| `ENABLE_BLENDER`, `_FREECAD`, `_KICAD`, `_BUILD123D`, `_INKSCAPE`, `_OPENMODELICA`, `_NGSPICE`, `_OPENECRAFT`, `_BROWSER`, `_COMFYUI`, `_VNC`, `_FILES` | `1` | Disable individual services (`0`) |
 | `ENABLE_VOICE`, `ENABLE_COMFYUI_3D`, `ENABLE_OPENCODE` | `0` | Enable optional services (`1`) |
 | `OPENCODE_PASSWORD` | generated | Password for the OpenCode web UI (user `opencode`) |
 | `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, … | – | API keys for OpenCode; can also be entered in its web UI |
@@ -263,6 +267,7 @@ The scripts, custom servers and the plugin in this repository are licensed under
 - Inkscape under the GPL
 - OpenModelica under the AGPL-3.0 or the OSMC Public License, the Modelica Standard Library under the BSD 3-Clause license
 - ngspice under a modified BSD license, SPICEBridge under the GPL-3.0
+- OpenECraft under the MIT license or Apache 2.0, at your option
 - comfy-mcp under the AGPL-3.0
 - Kokoro under Apache 2.0
 - Chromium under BSD licenses
