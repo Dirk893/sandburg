@@ -56,6 +56,13 @@
         "Authorization": "Bearer ${SANDBURG_TOKEN}"
       }
     },
+    "openecraft": {
+      "type": "http",
+      "url": "http://sandburg:9090/openecraft/mcp",
+      "headers": {
+        "Authorization": "Bearer ${SANDBURG_TOKEN}"
+      }
+    },
     "browser": {
       "type": "http",
       "url": "http://sandburg:9090/browser/mcp",

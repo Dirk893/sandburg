@@ -8,16 +8,16 @@ source /opt/sandburg/bin/common.sh
 
 projects="${WORKSPACE}/projects"
 mkdir -p /var/log/sandburg /run/sandburg "${WORKSPACE}/.sandburg"
-for d in blender freecad kicad build123d inkscape openmodelica ngspice browser audio; do
+for d in blender freecad kicad build123d inkscape openmodelica ngspice openecraft browser audio; do
     mkdir -p "${projects}/${d}"
 done
 
 # --- Catch typos in variable names -------------------------------------------
 # A misspelled name such as SANDBURG_TOKN is otherwise silently ignored and the
 # container falls back to its defaults, e.g. a generated token.
-known_vars=" SANDBURG_TOKEN SANDBURG_PROJECTS TS_AUTHKEY TS_HOSTNAME TS_EXTRA_ARGS TS_STATE_DIR
+known_vars=" SANDBURG_TOKEN SANDBURG_PROJECTS SANDBURG_IMAGE TS_AUTHKEY TS_HOSTNAME TS_EXTRA_ARGS TS_STATE_DIR
     ENABLE_BLENDER ENABLE_FREECAD ENABLE_KICAD ENABLE_BUILD123D ENABLE_INKSCAPE ENABLE_BROWSER
-    ENABLE_OPENMODELICA ENABLE_NGSPICE
+    ENABLE_OPENMODELICA ENABLE_NGSPICE ENABLE_OPENECRAFT
     ENABLE_COMFYUI ENABLE_COMFYUI_3D ENABLE_VNC ENABLE_FILES ENABLE_VOICE ENABLE_OPENCODE
     VOICE_IDLE_MINUTES VOICE_WHISPER_MODEL VOICE_VENV "
 known_vars="${known_vars//$'\n'/ }"
@@ -79,7 +79,7 @@ fi
 declare -A service_flags=(
     [blender]=ENABLE_BLENDER [freecad]=ENABLE_FREECAD [kicad]=ENABLE_KICAD
     [comfyui]=ENABLE_COMFYUI [build123d]=ENABLE_BUILD123D [inkscape]=ENABLE_INKSCAPE
-    [openmodelica]=ENABLE_OPENMODELICA [ngspice]=ENABLE_NGSPICE
+    [openmodelica]=ENABLE_OPENMODELICA [ngspice]=ENABLE_NGSPICE [openecraft]=ENABLE_OPENECRAFT
     [browser]=ENABLE_BROWSER [voice]=ENABLE_VOICE
 )
 filter='.'

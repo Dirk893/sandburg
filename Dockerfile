@@ -53,6 +53,8 @@ ARG PLAYWRIGHT_MCP_VERSION=0.0.83
 ARG OPENMODELICA_CHANNEL=release
 ARG SPICEBRIDGE_VERSION=1.3.0
 ARG OPENCODE_VERSION=2.3.2
+ARG OPENECRAFT_VERSION=0.1.0
+ARG OPENECRAFT_SHA256=1b68020a4fecc91af614b523fb40eae00f9b5aee42592f853c2cd9b815a6c10e
 
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ=Etc/UTC \
@@ -86,6 +88,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     ENABLE_VOICE=0 \
     ENABLE_COMFYUI_3D=0 \
     ENABLE_OPENCODE=0 \
+    ENABLE_OPENECRAFT=1 \
     KOKORO_VERSION=0.9.4 \
     TORCH_VERSION=2.11.0 \
     TORCH_INDEX=https://download.pytorch.org/whl/cu128 \
@@ -260,6 +263,17 @@ RUN apt-get update \
     && curl -fsSL "https://github.com/anomalyco/opencode/releases/download/v${OPENCODE_VERSION}/opencode-linux-x64.tar.gz" \
         | tar -xz -C /usr/local/bin opencode \
     && opencode --version
+
+# --- OpenECraft (electrical CAE: schematics, terminal and cable plans, cabinet --
+#     layout). Only the command line with its MCP server is used, it needs no GUI
+#     libraries. The checksum pins the release archive.
+RUN curl -fL -o /tmp/openecraft.tar.gz \
+        "https://github.com/nilres/OpenECraft/releases/download/v${OPENECRAFT_VERSION}/OpenECraft-${OPENECRAFT_VERSION}-linux-x86_64.tar.gz" \
+    && echo "${OPENECRAFT_SHA256}  /tmp/openecraft.tar.gz" | sha256sum -c - \
+    && tar -xzf /tmp/openecraft.tar.gz -C /usr/local/bin --strip-components=2 \
+        "openecraft-${OPENECRAFT_VERSION}-linux-x86_64/bin/openecraft-cli" \
+    && rm /tmp/openecraft.tar.gz \
+    && test -x /usr/local/bin/openecraft-cli
 
 # --- mcp-proxy (late, so a patch or version bump keeps the cache above) -------
 COPY --from=mcp-proxy /out/mcp-proxy /usr/local/bin/mcp-proxy

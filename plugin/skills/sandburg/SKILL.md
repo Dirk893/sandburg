@@ -1,12 +1,12 @@
 ---
 name: sandburg
-description: Working with the Sandburg, a remote workshop with Blender, FreeCAD, KiCad, build123d, Inkscape, OpenModelica, ngspice, ComfyUI, a browser and speech output. Use whenever a tool of the MCP servers blender, freecad, kicad, build123d, inkscape, openmodelica, ngspice, comfyui, browser or voice is used, or when files need to be exchanged with the Sandburg (3D models, STL/STEP, Gerber, SVG/DXF, Modelica models, SPICE netlists, simulation results, images, audio).
+description: Working with the Sandburg, a remote workshop with Blender, FreeCAD, KiCad, build123d, Inkscape, OpenModelica, ngspice, ComfyUI, a browser and speech output. Use whenever a tool of the MCP servers blender, freecad, kicad, build123d, inkscape, openmodelica, ngspice, openecraft, comfyui, browser or voice is used, or when files need to be exchanged with the Sandburg (3D models, STL/STEP, Gerber, SVG/DXF, Modelica models, SPICE netlists, simulation results, images, audio).
 ---
 
 # Sandburg
 
 The MCP servers `blender`, `freecad`, `kicad`, `build123d`, `inkscape`, `openmodelica`, `ngspice`,
-`comfyui`, `browser` and `voice` do not run on this machine but on a remote GPU pod, the
+`openecraft`, `comfyui`, `browser` and `voice` do not run on this machine but on a remote GPU pod, the
 **Sandburg**. All paths in these tool calls refer to the Sandburg's file system.
 Local files are not visible there, and the Sandburg's files are not visible here.
 
@@ -23,6 +23,7 @@ Everything the user should receive belongs under `/workspace/projects/`:
 | Inkscape (SVG, DXF, PDF) | `/workspace/projects/inkscape/` |
 | OpenModelica (.mo models, results/, plots/) | `/workspace/projects/openmodelica/` (relative paths end up here) |
 | ngspice (one folder per circuit: netlist, raw data, schematic, KiCad export) | `/workspace/projects/ngspice/circuits/` |
+| OpenECraft (electrical projects, PDF/DXF exports) | `/workspace/projects/openecraft/` (the only folder its tools may access) |
 | ComfyUI inputs / results | `/workspace/projects/comfyui/input/`, `/workspace/projects/comfyui/output/` |
 | Browser downloads, screenshots | `/workspace/projects/browser/` |
 | Audio (speech output, transcripts) | `/workspace/projects/audio/` |
@@ -78,6 +79,9 @@ sandburg put drawing.step freecad/           # upload; output is the path on the
   `measure_*` tools. Files of a circuit end up in `ngspice/circuits/spicebridge_<circuit_id>_*/`, so a
   KiCad schematic from `export_kicad` can be fetched from there. `open_viewer` returns a URL with
   `127.0.0.1`; replace it with the Sandburg address before passing it on.
+- **Electrical documentation** (circuit diagrams with cross references, terminal and cable plans, BOM,
+  control cabinet layout, IEC 81346 designations): `openecraft`. Its tools can only read and
+  write under `/workspace/projects/openecraft/`. For printed circuit boards use `kicad` instead.
 - **Generating images:** `comfyui`. With the 3D model enabled, the template
   `3d_hunyuan3d-v2.1` turns an image into an untextured 3D model (GLB under
   `comfyui/output/mesh/`) that can be refined in Blender.

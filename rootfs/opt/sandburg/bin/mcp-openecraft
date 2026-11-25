@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# OpenECraft MCP server (stdio) with /workspace/projects/openecraft as working
+# directory. OPENECRAFT_MCP_ROOT limits the folders the tools may read and write
+# to that directory. HOME points to the volume so settings survive a restart.
+set -euo pipefail
+dir="${WORKSPACE:-/workspace}/projects/openecraft"
+home="${WORKSPACE:-/workspace}/.sandburg/openecraft"
+mkdir -p "${dir}" "${home}"
+cd "${dir}"
+export OPENECRAFT_MCP_ROOT="${dir}" HOME="${home}"
+exec /usr/local/bin/openecraft-cli mcp "$@"

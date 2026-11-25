@@ -28,6 +28,7 @@ working directory:
 | Inkscape (SVG, DXF, PDF) | `/workspace/projects/inkscape/` |
 | OpenModelica (.mo models, results/, plots/) | `/workspace/projects/openmodelica/` (relative paths end up here) |
 | ngspice (one folder per circuit: netlist, raw data, schematic, KiCad export) | `/workspace/projects/ngspice/circuits/` |
+| OpenECraft (electrical projects, PDF/DXF exports) | `/workspace/projects/openecraft/` (the only folder its tools may access) |
 | ComfyUI inputs / results | `/workspace/projects/comfyui/input/`, `/workspace/projects/comfyui/output/` |
 | Browser downloads, screenshots | `/workspace/projects/browser/` |
 | Audio (speech output, transcripts) | `/workspace/projects/audio/` |
@@ -86,6 +87,9 @@ browser or as a WebDAV drive), with paths relative to `/workspace/projects`
   `measure_*` tools. Files of a circuit end up in `ngspice/circuits/spicebridge_<circuit_id>_*/`, so a
   KiCad schematic from `export_kicad` can be fetched from there. `open_viewer` returns a URL with
   `127.0.0.1`; replace it with the Sandburg address before passing it on.
+- **Electrical documentation** (circuit diagrams with cross references, terminal and cable plans, BOM,
+  control cabinet layout, IEC 81346 designations): `openecraft`. Its tools can only read and
+  write under `/workspace/projects/openecraft/`. For printed circuit boards use `kicad` instead.
 - **Generating images:** `comfyui`. With the 3D model enabled, the template
   `3d_hunyuan3d-v2.1` turns an image into an untextured 3D model (GLB under
   `comfyui/output/mesh/`) that can be refined in Blender.

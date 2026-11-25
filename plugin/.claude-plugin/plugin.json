@@ -18,6 +18,7 @@
     "modelica",
     "ngspice",
     "spice",
+    "openecraft",
     "comfyui",
     "playwright",
     "tts",
@@ -93,6 +94,13 @@
     "ngspice": {
       "type": "http",
       "url": "http://${user_config.host}:9090/ngspice/mcp",
+      "headers": {
+        "Authorization": "Bearer ${user_config.token}"
+      }
+    },
+    "openecraft": {
+      "type": "http",
+      "url": "http://${user_config.host}:9090/openecraft/mcp",
       "headers": {
         "Authorization": "Bearer ${user_config.token}"
       }

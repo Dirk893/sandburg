@@ -92,6 +92,14 @@
         "PATH": "/usr/local/bin:/usr/bin:/bin"
       }
     },
+    "openecraft": {
+      "command": "/opt/sandburg/bin/mcp-openecraft",
+      "args": [],
+      "timeout": "10m",
+      "env": {
+        "PATH": "/usr/local/bin:/usr/bin:/bin"
+      }
+    },
     "browser": {
       "command": "/opt/sandburg/bin/mcp-browser",
       "args": [],
